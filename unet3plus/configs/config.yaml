@@ -1,0 +1,134 @@
+# project root working directory, automatically read by hydra (.../UNet3P)
+WORK_DIR: "" #${hydra:runtime.cwd}
+
+DATA_PREPARATION:
+  # unprocessed LiTS scan data paths, for custom data training skip this section details
+  SCANS_TRAIN_DATA_PATH: "/mnt/data1/Training Batch 2/"
+  SCANS_VAL_DATA_PATH: "/mnt/data1/Training Batch 1/"
+
+  # Resize scans to model input size
+  RESIZED_HEIGHT: ${INPUT.HEIGHT}
+  RESIZED_WIDTH: ${INPUT.WIDTH}
+
+  # Clip scans value in given range
+  SCAN_MIN_VALUE: -200
+  SCAN_MAX_VALUE: 250
+
+DATASET:
+  # paths should be relative from project root path
+  TRAIN:
+  #   IMAGES_PATH: "/mnt/data1/lits/train/images"
+  #   MASK_PATH: "/mnt/data1/lits/train/mask"
+  # # TRAIN:
+    IMAGES_PATH: "/mnt/data1/kits/train_30p/images"
+    MASK_PATH: "/mnt/data1/kits/train_30p/mask"
+  VAL:
+    IMAGES_PATH: "/mnt/data1/lits/val/images"
+    MASK_PATH: "/mnt/data1/lits/val/mask"
+  VAL_KITS:
+    IMAGES_PATH: "/mnt/data1/kits/val_new/images"
+    MASK_PATH: "/mnt/data1/kits/val_new/mask"
+  VAL_ANAM:
+    IMAGES_PATH: "/mnt/data1/_segmentation_2025/복부_MRI데이터/anam/images"
+    MASK_PATH: "/mnt/data1/_segmentation_2025/복부_MRI데이터/anam/mask"
+  VAL_IMPERIAL_PRE:
+    IMAGES_PATH: "/mnt/data1/_segmentation_2025/심장_MRI/imperial_pre/images"
+    MASK_PATH: "/mnt/data1/_segmentation_2025/심장_MRI/imperial_pre/mask"
+  VAL_IMPERIAL_POST:
+    IMAGES_PATH: "/mnt/data1/_segmentation_2025/심장_MRI/imperial_post/images"
+    MASK_PATH: "/mnt/data1/_segmentation_2025/심장_MRI/imperial_post/mask"
+
+loss_type: curv # default curv
+model_type: default # default curv fused
+curvature: 3dm # 2d 3dg 3dm
+model_curvature: none # 2d 3dg 3dm
+
+HYPER_PARAMETERS:
+  EPOCHS: 1 # 1 (100p, 30p(는 한 번 보고)) # 5 (100n)
+  BATCH_SIZE: 8  # specify per gpu batch size
+  LEARNING_RATE: 1e-3  # 1e-3
+
+MODEL:
+  # available variants are unet3plus, unet3plus_deepsup, unet3plus_deepsup_cgm
+  TYPE: "unet3plus"
+  WEIGHTS_FILE_NAME: "kits2023_cross_2d_9"
+
+SEED: 5  # for result's reproducibility
+VERBOSE: 1  # For logs printing details, available options are 0, 1, 2
+DATALOADER_WORKERS: 0 #3  # number of workers used for data loading
+SHOW_CENTER_CHANNEL_IMAGE: True  # only true for UNet3+ for custom dataset it should be False
+
+# Model input shape
+INPUT:
+  HEIGHT: 320 # 320
+  WIDTH: 320 # 320
+  CHANNELS: 3
+
+# Model output classes
+OUTPUT:
+  CLASSES: 2
+
+USE_MULTI_GPUS:
+  VALUE: True #False  # If True use multiple gpus for training
+  # GPU_IDS: Could be integer or list of integers.
+  # In case Integer: if integer value is -1 then it uses all available gpus.
+  # otherwise if positive number, then use given number of gpus.
+  # In case list of Integers: each integer will be considered as gpu id
+  # e.g. [4, 5, 7] means use gpu 5,6 and 8 for training/evaluation
+  GPU_IDS: 1
+
+
+
+CALLBACKS:
+  # paths should be relative from project root path
+  TENSORBOARD:
+    PATH: "/mnt/data1/seg_checkpoint/tb_logs"
+
+  EARLY_STOPPING:
+    PATIENCE: 20
+
+  MODEL_CHECKPOINT:
+    PATH: "/mnt/data1/seg_checkpoint"
+    SAVE_WEIGHTS_ONLY: True
+    SAVE_BEST_ONLY: True
+
+  CSV_LOGGER:
+    PATH: "/mnt/data1/seg_checkpoint"
+    APPEND_LOGS: False
+
+
+PREPROCESS_DATA:
+  RESIZE:
+    VALUE: False  # if True, resize to input height and width
+    HEIGHT: ${INPUT.HEIGHT}
+    WIDTH: ${INPUT.WIDTH}
+
+  IMAGE_PREPROCESSING_TYPE: "normalize"
+
+  NORMALIZE_MASK:
+    VALUE: False  # if True, divide mask by given value
+    NORMALIZE_VALUE: 255
+
+  SHUFFLE:
+    TRAIN:
+      VALUE: True
+    VAL:
+      VALUE: False
+    VAL_KITS:
+      VALUE: False
+    VAL_ANAM:
+      VALUE: False
+    VAL_IMPERIAL_PRE:
+      VALUE: False
+    VAL_IMPERIAL_POST:
+      VALUE: False
+
+
+# to stop hydra from storing logs files
+defaults:
+  - _self_
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+hydra:
+  output_subdir: null
