@@ -198,14 +198,14 @@ def compute_3d_curvatures_value(volume):
     # Compute gradient magnitude squared
     G_mag_sq = Gx**2 + Gy**2 + Gz**2
     G_mag_sq[G_mag_sq == 0] = 1e-6  # Avoid division by zero
-    coeff_lambda = 1e-6
+    coeff_lambda = 1e-10
     
     # Mean curvature formula (divergence of normal vector field)
     mean_curvature = (Gxx * (Gy**2 + Gz**2) + Gyy * (Gx**2 + Gz**2) + Gzz * (Gx**2 + Gy**2)
                       - 2 * (Gx * Gy * Gxy + Gx * Gz * Gxz + Gy * Gz * Gyz)) / (2 * np.power(G_mag_sq, 1.5))
     
     # Gaussian curvature formula (determinant of Hessian)
-    gaussian_curvature = ((Gxx * Gyy * Gzz) + 2 * (Gxy * Gxz * Gyz) - (Gxx * Gyz**2) - (Gyy * Gxz**2) - (Gzz * Gxy**2)) / (G_mag_sq**2 + coeff_lambda)
+    gaussian_curvature = ((Gxx * Gyy * Gzz) + 2 * (Gxy * Gxz * Gyz) - (Gxx * Gyz**2) - (Gyy * Gxz**2) - (Gzz * Gxy**2)) + coeff_lambda / G_mag_sq**2
     
 # 망가우시안
 #     trace_H = Gxx + Gyy + Gzz
